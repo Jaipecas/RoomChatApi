@@ -20,5 +20,14 @@ namespace RoomChatApi.Hubs
         {
             await Clients.Group(roomId.ToString()).SendAsync("ReceiveMessage", userName, message);
         }
+
+        public async Task StartTimer(int roomId, DateTime startTime, int durationInMinutes, bool disable)
+        {
+            await Clients.Group(roomId.ToString()).SendAsync("TimerStarted", new
+            {
+                endTime = startTime.AddMinutes(durationInMinutes),
+                disableChat = disable
+            });
+        }
     }
 }
