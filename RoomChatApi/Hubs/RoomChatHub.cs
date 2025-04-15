@@ -8,7 +8,7 @@ namespace RoomChatApi.Hubs
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, roomId.ToString());
 
-            await Clients.Group(roomId.ToString()).SendAsync("ReceiveMessage", $"{userName} entró a la sala");
+            await Clients.Group(roomId.ToString()).SendAsync("JoinedGroup", $"{userName} entró a la sala");
         }
 
         public async Task LeaveGroup(int roomId, string userName)
