@@ -1,21 +1,21 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using RoomChatApi.Commands;
+using RoomChatApi.Queries;
 
 namespace RoomChatApi.Hubs
 {
     public class RoomChatHub : Hub
     {
-        public async Task JoinGroup(int roomId, string userName)
+
+        public async Task JoinGroup(int roomId, string userId, string userName)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, roomId.ToString());
+
+            await UserCommands.UpdateUserIsConnected(userId, roomId, true, Context.ConnectionId);
 
             await Clients.Group(roomId.ToString()).SendAsync("JoinedGroup", $"{userName} entró a la sala");
         }
 
-        public async Task LeaveGroup(int roomId, string userName)
-        {
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomId.ToString());
-            await Clients.Group(roomId.ToString()).SendAsync("ReceiveMessage", $"{userName} salió de la sala");
-        }
         public async Task SendMessage(int roomId, string userName, string message)
         {
             await Clients.Group(roomId.ToString()).SendAsync("ReceiveMessage", userName, message);
@@ -28,6 +28,21 @@ namespace RoomChatApi.Hubs
                 endTime = startTime.AddMinutes(durationInMinutes),
                 disableChat = disable
             });
+        }
+
+        public override async Task OnDisconnectedAsync(Exception? exception)
+        {
+
+            var (userId, userName, roomId) = await UserQueries.GetUserByConnectionId(Context.ConnectionId);
+
+            if (userId != null)
+            {
+                await UserCommands.UpdateUserIsConnected(userId, (int)roomId!, false, null);
+
+                await Clients.Group(roomId.ToString()!).SendAsync("UserDisconnected", userName);
+            }
+
+            await base.OnDisconnectedAsync(exception);
         }
     }
 }
