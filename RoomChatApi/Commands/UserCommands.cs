@@ -5,9 +5,8 @@ namespace RoomChatApi.Commands
 {
     public static class UserCommands
     {
-        public static async Task UpdateUserIsConnected(string userId, int roomId, bool isConnected, string? connectionId)
+        public static async Task UpdateUserIsConnected(string userId, int roomId, bool isConnected, string? connectionId, string connectionString)
         {
-            var connectionString = "Server=localhost\\SQLEXPRESS;Database=VirtualLibrary;Trusted_Connection=True;TrustServerCertificate=True";
 
             const string query = @"
             UPDATE StudyRoomUsers

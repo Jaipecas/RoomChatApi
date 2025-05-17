@@ -4,9 +4,8 @@ namespace RoomChatApi.Queries
 {
     public static class UserQueries
     {
-        public static async Task<(string? UserId, string? UserName, int? RoomId)> GetUserByConnectionId(string connectionId)
+        public static async Task<(string? UserId, string? UserName, int? RoomId)> GetUserByConnectionId(string connectionId, string connectionString)
         {
-            var connectionString = "Server=localhost\\SQLEXPRESS;Database=VirtualLibrary;Trusted_Connection=True;TrustServerCertificate=True";
 
             const string query = @"
             SELECT UserId, UserName, StudyRoomId 
