@@ -36,6 +36,15 @@ namespace RoomChatApi.Hubs
             });
         }
 
+        public async Task RestartTimer(int roomId, bool disable)
+        {
+            await Clients.Group(roomId.ToString()).SendAsync("RestartTimer", new
+            {
+                endTime = DateTime.Now,
+                disableChat = disable
+            });
+        }
+
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
 
