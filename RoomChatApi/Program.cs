@@ -20,34 +20,36 @@ builder.Services.AddAuthentication(options =>
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-.AddJwtBearer(options =>
-{
-    //lee el token de las cookies
-    options.Events = new JwtBearerEvents
-    {
-        OnMessageReceived = context =>
-        {
-            var token = context.Request.Cookies["jwt"];
-            if (!string.IsNullOrEmpty(token))
-            {
-                context.Token = token;
-            }
-            return Task.CompletedTask;
-        }
-    };
-    options.RequireHttpsMetadata = false;//deberia ponerse en true en PRO
-    options.SaveToken = true;
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
-        ValidAudience = builder.Configuration["JWT:ValidAudience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"]!))
-    };
-});
+ .AddJwtBearer(options =>
+ {
+     options.TokenValidationParameters = new TokenValidationParameters
+     {
+         ValidateIssuer = true,
+         ValidateAudience = true,
+         ValidateLifetime = true,
+         ValidateIssuerSigningKey = true,
+         ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
+         ValidAudience = builder.Configuration["JWT:ValidAudience"],
+         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"]))
+     };
+
+     options.Events = new JwtBearerEvents
+     {
+         OnMessageReceived = context =>
+         {
+             var accessToken = context.Request.Query["access_token"];
+             var path = context.HttpContext.Request.Path;
+
+             if (!string.IsNullOrEmpty(accessToken) &&
+                 path.StartsWithSegments("/hubs/roomChatHub"))
+             {
+                 context.Token = accessToken;
+             }
+
+             return Task.CompletedTask;
+         }
+     };
+ });
 
 
 
@@ -58,14 +60,14 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend",
         policy =>
         {
-            policy.WithOrigins("http://localhost:5173")
+            policy.WithOrigins("https://reliable-bienenstitch-9260e7.netlify.app")
                   .AllowCredentials()
                   .AllowAnyMethod()
                   .AllowAnyHeader();
         });
 });
 
-builder.Services.AddSignalR();
+builder.Services.AddSignalR().AddAzureSignalR();
 
 var app = builder.Build();
 
@@ -82,6 +84,7 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
 
+app.UseAuthentication(); 
 app.UseAuthorization();
 
 app.MapControllers();
